@@ -3,11 +3,8 @@ package com.example.projetosd.entrypoint.kafka.producer;
 import com.example.projetosd.domain.Fruit;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.micrometer.core.annotation.Counted;
-import io.micrometer.core.annotation.Timed;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
-import io.micrometer.core.instrument.Tags;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,6 +12,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import static com.example.projetosd.configuration.Topics.TopicsConstants.FRUIT_TOPIC_NAME;
 
@@ -33,11 +31,12 @@ public class FruitProducer {
     private final MeterRegistry meterRegistry;
 
     static {
-        FRUITS = List.of("Banana", "Laranja", "Limao", "Morango", "Abacaxi", "Abacate", "Amora", "Figo");
+        FRUITS = List.of(
+            "Banana", "Laranja", "Limao", "Morango", "Abacaxi", "Abacate", "Amora", "Figo", "Melancia", "Mamao",
+                "Melao", "Damasco", "Tangerina", "Caju", "Caja", "Kiwi", "Cupuacu", "Graviola", "Acerola"
+        );
     }
 
-    @Counted(value = "sd_fruit_producer_production", description = "Counter of all production messages")
-    @Timed(value = "sd_fruit_producer_latency", description = "Latency of producer")
     public Fruit produce() {
         final var index = (int) (Math.random() * FRUITS.size());
         final var fruit = new Fruit(FRUITS.get(index));
@@ -56,6 +55,28 @@ public class FruitProducer {
                 throw new RuntimeException(e);
             }
         });
+    }
+
+    public Fruit produce(String name) {
+        final var fruit = FRUITS.stream()
+                .filter(it -> it.equalsIgnoreCase(name))
+                .map(Fruit::new)
+                .findFirst()
+                .orElseThrow(
+                        () -> new NoSuchElementException(String.format("Fruta nao encontrada. Disponiveis: %s", FRUITS))
+                );
+        try {
+            kafkaTemplate.send(
+                    new ProducerRecord<>(
+                            FRUIT_TOPIC_NAME,
+                            orderedProducer ? fruit.name() : null,
+                            mapper.writeValueAsString(fruit)
+                    )
+            );
+            return fruit;
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }
