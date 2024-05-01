@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.Tags;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,6 +24,9 @@ public class FruitProducer {
 
     @Value("#{new Boolean('${kafka-ordered-producer:false}')}")
     private Boolean orderedProducer;
+    @Value("${spring.kafka.producer.acks:all}")
+    private String producerAckMode;
+
     private static final List<String> FRUITS;
     private final ObjectMapper mapper;
     private final KafkaTemplate<String, String> kafkaTemplate;
@@ -36,7 +41,8 @@ public class FruitProducer {
     public Fruit produce() {
         final var index = (int) (Math.random() * FRUITS.size());
         final var fruit = new Fruit(FRUITS.get(index));
-        return meterRegistry.timer("sd_fruit_producer_production").record(() -> {
+        final var tag = Tag.of("ack-mode", producerAckMode);
+        return meterRegistry.timer("sd_fruit_producer_production", List.of(tag)).record(() -> {
             try {
                 kafkaTemplate.send(
                     new ProducerRecord<>(
