@@ -1,6 +1,8 @@
 #!/bin/bash
 
+port=$1
+
 while true;
 do
-    curl localhost:8080/fruits
+    curl localhost:"$port"/fruits
 done

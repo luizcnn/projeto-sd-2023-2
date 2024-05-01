@@ -1,7 +1,7 @@
 services:
-  app:
+  app1:
     image: projeto-sd
-    container_name: projeto-sd
+    container_name: projeto-sd-1
     ports:
       - '8080:8080'
     depends_on:
@@ -13,6 +13,38 @@ services:
       - SPRING_PROFILES_ACTIVE=dev
       - KAFKA_BOOTSTRAP_SERVERS=broker1:9092,broker2:9092,broker3:9092
       - SPRING_KAFKA_PRODUCER_ACK=all
+      - KAFKA_ORDERED_PRODUCER=true
+      - PROMETHEUS_SERVER=prometheus:9090
+  app2:
+    image: projeto-sd
+    container_name: projeto-sd-2
+    ports:
+      - '8081:8080'
+    depends_on:
+      - broker1
+      - broker2
+      - broker3
+      - prometheus
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - KAFKA_BOOTSTRAP_SERVERS=broker1:9092,broker2:9092,broker3:9092
+      - SPRING_KAFKA_PRODUCER_ACK=1
+      - KAFKA_ORDERED_PRODUCER=true
+      - PROMETHEUS_SERVER=prometheus:9090
+  app3:
+    image: projeto-sd
+    container_name: projeto-sd-3
+    ports:
+      - '8082:8080'
+    depends_on:
+      - broker1
+      - broker2
+      - broker3
+      - prometheus
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - KAFKA_BOOTSTRAP_SERVERS=broker1:9092,broker2:9092,broker3:9092
+      - SPRING_KAFKA_PRODUCER_ACK=0
       - KAFKA_ORDERED_PRODUCER=true
       - PROMETHEUS_SERVER=prometheus:9090
 

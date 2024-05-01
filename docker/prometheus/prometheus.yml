@@ -6,4 +6,12 @@ scrape_configs:
   - job_name: 'projeto-sd'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['projeto-sd:8080']
+      - targets: ['projeto-sd-1:8080']
+        labels:
+          instance: 'projeto-sd-1'
+      - targets: [ 'projeto-sd-2:8080' ]
+        labels:
+          instance: 'projeto-sd-2'
+      - targets: [ 'projeto-sd-3:8080' ]
+        labels:
+          instance: 'projeto-sd-3'

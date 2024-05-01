@@ -12,7 +12,7 @@ public enum Topics {
     FRUIT_TOPIC(
             TopicBuilder
                     .name(TopicsConstants.FRUIT_TOPIC_NAME)
-                    .partitions(10)
+                    .partitions(12)
                     .replicas(3)
                     .build()
     );
