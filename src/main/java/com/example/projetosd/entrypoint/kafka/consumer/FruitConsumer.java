@@ -3,6 +3,7 @@ package com.example.projetosd.entrypoint.kafka.consumer;
 import com.example.projetosd.domain.Fruit;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -21,21 +22,24 @@ public class FruitConsumer {
 
     private final ObjectMapper mapper;
 
+    private final MeterRegistry meterRegistry;
+
     @KafkaListener(topics = {FRUIT_TOPIC_NAME}, groupId = FRUIT_TOPIC_GROUP_ID)
     public void consume(ConsumerRecord<String, String> record) {
-        try {
-            final var msg = record.value();
-            final var fruit = mapper.readValue(msg, Fruit.class);
-            log.info(
-                "status=consume-success, fruit={}, partition={}, offset={}",
-                fruit.name(),
-                record.partition(),
-                record.offset()
-            );
-        } catch (JsonProcessingException e) {
-            throw new UncheckedIOException(e);
-        }
-
+        meterRegistry.timer("sd_fruit_consumer_message_processing_time").record(() -> {
+            try {
+                final var msg = record.value();
+                final var fruit = mapper.readValue(msg, Fruit.class);
+                log.info(
+                        "status=consume-success, fruit={}, partition={}, offset={}",
+                        fruit.name(),
+                        record.partition(),
+                        record.offset()
+                );
+            } catch (JsonProcessingException e) {
+                throw new UncheckedIOException(e);
+            }
+        });
     }
 
 }

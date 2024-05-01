@@ -81,8 +81,11 @@ services:
       - --config.file=/etc/prometheus/prometheus.yml
     volumes:
       - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - sd_prometheus_data:/prometheus
     ports:
       - '9090:9090'
 
 volumes:
   sd_grafana_data: {}
+  sd_prometheus_data: {}
+
